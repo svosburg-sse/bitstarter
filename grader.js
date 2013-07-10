@@ -46,7 +46,22 @@ var loadChecks = function(checksfile) {
     return JSON.parse(fs.readFileSync(checksfile));
 };
 
+var getHtmlFromUrl = function(url) {
+    rest.get(url).on('complete', function(result) {
+	fs.writeFile('downloaded-url.html', result, function(err) {
+	     if (err) throw err;
+	     console.log('successfully saved');
+	});
+    });
+};
+
+
 var checkHtmlFile = function(htmlfile, checksfile) {
+//    console.log("first 4 chars of htmlfile: " + htmlfile.substring(0,4));
+    if (htmlfile.substring(0,4) == "http") {
+       htmlfile = 'downloaded-url.html';
+    }
+//    console.log("html file: " + htmlfile);
     $ = cheerioHtmlFile(htmlfile);
     var checks = loadChecks(checksfile).sort();
     var out = {};
@@ -66,12 +81,23 @@ var clone = function(fn) {
 if(require.main == module) {
     program
 	.option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
-	.option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
-	.option('-url, --url <url>', 'URL to index.html', clone(assertFileExists), URL_DEFAULT)
+	.option('-f, --file <html_file>', 'Path to index.html')
+	.option('-u, --url <url>', 'URL to index.html')
 	.parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
+    console.log(program.file);
+    console.log(program.url);
+    var src = '';
+    if ((typeof program.file != 'undefined') && program.file.length > 0) {
+	src = program.file;
+    } else if (program.url.length > 0) {
+	src = program.url;
+	getHtmlFromUrl(src);
+    } else {
+	process.exit(1);
+    }
+    var checkJson = checkHtmlFile(src, program.checks);
     var outJson = JSON.stringify(checkJson, null, 4);
     console.log(outJson);
 } else {
     exports.checkHtmlFile = checkHtmlFile;
-}k
+}
