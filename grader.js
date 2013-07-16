@@ -47,21 +47,26 @@ var loadChecks = function(checksfile) {
 };
 
 var getHtmlFromUrl = function(url) {
+    console.log("calling getHtmlFromUrl");
     rest.get(url).on('complete', function(result) {
 	fs.writeFile('downloaded-url.html', result, function(err) {
-	     if (err) throw err;
-	     console.log('successfully saved');
+	     if (err) {
+		 throw err;
+		 console.log('error writing file');
+             }
+                 console.log('successfully saved');
 	});
+	for (i = 1; i<100000; i++) {}
     });
 };
 
 
 var checkHtmlFile = function(htmlfile, checksfile) {
-//    console.log("first 4 chars of htmlfile: " + htmlfile.substring(0,4));
+    console.log("first 4 chars of htmlfile: " + htmlfile.substring(0,4));
     if (htmlfile.substring(0,4) == "http") {
        htmlfile = 'downloaded-url.html';
     }
-//    console.log("html file: " + htmlfile);
+    console.log("html file: " + htmlfile);
     $ = cheerioHtmlFile(htmlfile);
     var checks = loadChecks(checksfile).sort();
     var out = {};
@@ -95,6 +100,7 @@ if(require.main == module) {
     } else {
 	process.exit(1);
     }
+    console.log('src: ' + src);
     var checkJson = checkHtmlFile(src, program.checks);
     var outJson = JSON.stringify(checkJson, null, 4);
     console.log(outJson);
